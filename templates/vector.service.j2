@@ -1,0 +1,16 @@
+[Unit]
+Description=Vector log aggregator
+Documentation=https://vector.dev
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=root
+ExecStartPre={{ vector_binary_path }} validate --config-yaml {{ vector_config_path }}
+ExecStart={{ vector_binary_path }} --config-yaml {{ vector_config_path }}
+Restart=always
+RestartSec=5
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target

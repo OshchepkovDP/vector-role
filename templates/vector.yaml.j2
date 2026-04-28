@@ -1,0 +1,23 @@
+data_dir: {{ vector_data_dir }}
+
+sources:
+  demo_logs:
+    type: demo_logs
+    format: syslog
+    interval: 1
+
+transforms:
+  remap_logs:
+    type: remap
+    inputs:
+      - demo_logs
+    source: |
+      .host = "{{ inventory_hostname }}"
+
+sinks:
+  console_output:
+    type: console
+    inputs:
+      - remap_logs
+    encoding:
+      codec: json
