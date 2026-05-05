@@ -27,6 +27,13 @@
     group: root
   tags: [vector, config]
 
+- name: Check if vector archive already exists on localhost
+  ansible.builtin.stat:
+    path: "/tmp/vector-{{ vector_version }}.tar.gz"
+  delegate_to: localhost
+  register: vector_archive_stat
+  tags: [vector, distr]
+
 - name: Download vector on localhost
   ansible.builtin.get_url:
     url: "{{ vector_download_url }}"
