@@ -29,7 +29,7 @@
 
 - name: Check if vector archive already exists on localhost
   ansible.builtin.stat:
-    path: "/tmp/vector-{{ vector_version }}.tar.gz"
+    path: "/tmp/vector-{{ vector_version }}-musl.tar.gz"
   delegate_to: localhost
   register: vector_archive_stat
   tags: [vector, distr]
@@ -37,7 +37,7 @@
 - name: Download vector on localhost
   ansible.builtin.get_url:
     url: "{{ vector_download_url }}"
-    dest: "/tmp/vector-{{ vector_version }}.tar.gz"
+    dest: "/tmp/vector-{{ vector_version }}-musl.tar.gz"
     mode: '0644'
   delegate_to: localhost
   run_once: true
@@ -46,14 +46,14 @@
 
 - name: Copy vector archive to remote host
   ansible.builtin.copy:
-    src: "/tmp/vector-{{ vector_version }}.tar.gz"
-    dest: "/tmp/vector-{{ vector_version }}.tar.gz"
+    src: "/tmp/vector-{{ vector_version }}-musl.tar.gz"
+    dest: "/tmp/vector-{{ vector_version }}-musl.tar.gz"
     mode: '0644'
   tags: [vector, distr]
 
 - name: Unpack vector
   ansible.builtin.unarchive:
-    src: "/tmp/vector-{{ vector_version }}.tar.gz"
+    src: "/tmp/vector-{{ vector_version }}-musl.tar.gz"
     dest: "{{ vector_install_dir }}"
     remote_src: true
     extra_opts:
