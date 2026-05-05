@@ -7,9 +7,7 @@
     mode: '0755'
     owner: root
     group: root
-  tags:
-    - vector
-    - distr
+  tags: [vector, distr]
 
 - name: Create vector config directory
   ansible.builtin.file:
@@ -18,9 +16,7 @@
     mode: '0755'
     owner: root
     group: root
-  tags:
-    - vector
-    - config
+  tags: [vector, config]
 
 - name: Create vector data directory
   ansible.builtin.file:
@@ -29,31 +25,48 @@
     mode: '0755'
     owner: root
     group: root
-  tags:
-    - vector
-    - config
+  tags: [vector, config]
 
-- name: Get vector distrib
+- name: Check if vector archive already exists on localhost
+  ansible.builtin.stat:
+    path: "/tmp/vector-{{ vector_version }}-musl.tar.gz"
+  delegate_to: localhost
+  run_once: true
+  register: vector_archive_stat
+  tags: [vector, distr]
+
+- name: Download vector on localhost
   ansible.builtin.get_url:
     url: "{{ vector_download_url }}"
-    dest: "/tmp/vector-{{ vector_version }}.tar.gz"
+    dest: "/tmp/vector-{{ vector_version }}-musl.tar.gz"
     mode: '0644'
-  tags:
-    - vector
-    - distr
+    timeout: 120
+  delegate_to: localhost
+  run_once: true
+  when: not vector_archive_stat.stat.exists
+  retries: 3
+  delay: 10
+  register: download_result
+  until: download_result is succeeded
+  tags: [vector, distr]
+
+- name: Copy vector archive to remote host
+  ansible.builtin.copy:
+    src: "/tmp/vector-{{ vector_version }}-musl.tar.gz"
+    dest: "/tmp/vector-{{ vector_version }}-musl.tar.gz"
+    mode: '0644'
+  tags: [vector, distr]
 
 - name: Unpack vector
   ansible.builtin.unarchive:
-    src: "/tmp/vector-{{ vector_version }}.tar.gz"
+    src: "/tmp/vector-{{ vector_version }}-musl.tar.gz"
     dest: "{{ vector_install_dir }}"
     remote_src: true
     extra_opts:
       - "--strip-components=2"
     creates: "{{ vector_install_dir }}/bin/vector"
   ignore_errors: "{{ ansible_check_mode }}"
-  tags:
-    - vector
-    - distr
+  tags: [vector, distr]
 
 - name: Create symlink for vector binary
   ansible.builtin.file:
@@ -61,9 +74,7 @@
     dest: /usr/local/bin/vector
     state: link
   ignore_errors: "{{ ansible_check_mode }}"
-  tags:
-    - vector
-    - distr
+  tags: [vector, distr]
 
 - name: Deploy vector systemd service
   ansible.builtin.template:
@@ -71,9 +82,7 @@
     dest: /etc/systemd/system/vector.service
     mode: '0644'
   notify: Restart vector service
-  tags:
-    - vector
-    - service
+  tags: [vector, service]
 
 - name: Deploy vector configuration
   ansible.builtin.template:
@@ -83,9 +92,7 @@
     owner: root
     group: root
   notify: Restart vector service
-  tags:
-    - vector
-    - config
+  tags: [vector, config]
 
 - name: Enable and start vector service
   ansible.builtin.systemd:
@@ -93,13 +100,13 @@
     state: started
     enabled: true
     daemon_reload: true
+  when:
+    - ansible_service_mgr == 'systemd'
+    - ansible_facts['service_mgr'] is defined
+    - not (ansible_virtualization_type | default('') in ['docker', 'container', 'lxc'])
   ignore_errors: "{{ ansible_check_mode }}"
-  tags:
-    - vector
-    - service
+  tags: [vector, service]
 
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers
-  tags:
-    - vector
-    - restart_service
+  tags: [vector, restart_service]

@@ -4,4 +4,6 @@
   ansible.builtin.service:
     name: vector
     state: restarted
-  ignore_errors: "{{ ansible_check_mode }}"
+  when:
+    - ansible_service_mgr == 'systemd'
+    - not (ansible_virtualization_type | default('') in ['docker', 'container', 'lxc'])

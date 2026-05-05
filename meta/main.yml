@@ -2,11 +2,13 @@
 galaxy_info:
   author: OshchepkovDP
   description: Install and configure Vector log aggregator
+  company: MyCompany
   license: MIT
   min_ansible_version: "2.10"
   platforms:
     - name: Ubuntu
       versions:
+        - xenial
         - focal
         - jammy
     - name: Debian
@@ -17,5 +19,8 @@ galaxy_info:
     - vector
     - logging
     - monitoring
+
+  namespace: oshchepkovdp
+  role_name: vector_role
 
 dependencies: []

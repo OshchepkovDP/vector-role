@@ -1,0 +1,50 @@
+# molecule/default/verify.yml
+---
+- name: Verify
+  hosts: all
+  become: true
+  tasks:
+    - name: Check vector binary exists
+      ansible.builtin.stat:
+        path: /usr/local/bin/vector
+      register: vector_binary
+
+    - name: Assert vector binary exists
+      ansible.builtin.assert:
+        that: vector_binary.stat.exists
+        fail_msg: "Vector binary not found"
+        success_msg: "Vector binary found ✓"
+
+    - name: Check vector config exists
+      ansible.builtin.stat:
+        path: /etc/vector/vector.yaml
+      register: vector_config
+
+    - name: Assert vector config exists
+      ansible.builtin.assert:
+        that: vector_config.stat.exists
+        fail_msg: "Vector config not found"
+        success_msg: "Vector config found ✓"
+
+    - name: Validate vector config
+      ansible.builtin.command: >
+        /usr/local/bin/vector validate --config-yaml /etc/vector/vector.yaml
+      changed_when: false
+      register: vector_validate
+
+    - name: Assert vector config is valid
+      ansible.builtin.assert:
+        that: vector_validate.rc == 0
+        fail_msg: "Vector config validation failed"
+        success_msg: "Vector config is valid ✓"
+
+    - name: Check vector service file exists
+      ansible.builtin.stat:
+        path: /etc/systemd/system/vector.service
+      register: vector_service
+
+    - name: Assert vector service file exists
+      ansible.builtin.assert:
+        that: vector_service.stat.exists
+        fail_msg: "Vector service file not found"
+        success_msg: "Vector service file found ✓"
