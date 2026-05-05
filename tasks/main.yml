@@ -1,26 +1,26 @@
 ---
 # tasks file for vector-role
-- name: Create vector installation directory
-  ansible.builtin.file:
-    path: "{{ vector_install_dir }}"
-    state: directory
-    mode: '0755'
-    owner: root
-    group: root
+# tasks/main.yml
+
+- name: Download vector on localhost
+  ansible.builtin.get_url:
+    url: "{{ vector_download_url }}"
+    dest: "/tmp/vector-{{ vector_version }}.tar.gz"
+    mode: '0644'
+  delegate_to: localhost
+  run_once: true
   tags:
     - vector
     - distr
 
-- name: Create vector config directory
-  ansible.builtin.file:
-    path: "{{ vector_config_dir }}"
-    state: directory
-    mode: '0755'
-    owner: root
-    group: root
+- name: Copy vector archive to remote host
+  ansible.builtin.copy:
+    src: "/tmp/vector-{{ vector_version }}.tar.gz"
+    dest: "/tmp/vector-{{ vector_version }}.tar.gz"
+    mode: '0644'
   tags:
     - vector
-    - config
+    - distr
 
 - name: Create vector data directory
   ansible.builtin.file:
@@ -32,15 +32,6 @@
   tags:
     - vector
     - config
-
-- name: Get vector distrib
-  ansible.builtin.get_url:
-    url: "{{ vector_download_url }}"
-    dest: "/tmp/vector-{{ vector_version }}.tar.gz"
-    mode: '0644'
-  tags:
-    - vector
-    - distr
 
 - name: Unpack vector
   ansible.builtin.unarchive:
@@ -94,6 +85,7 @@
     enabled: true
     daemon_reload: true
   ignore_errors: "{{ ansible_check_mode }}"
+  when: ansible_service_mgr == 'systemd'
   tags:
     - vector
     - service
