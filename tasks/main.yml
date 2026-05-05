@@ -31,6 +31,7 @@
   ansible.builtin.stat:
     path: "/tmp/vector-{{ vector_version }}-musl.tar.gz"
   delegate_to: localhost
+  run_once: true
   register: vector_archive_stat
   tags: [vector, distr]
 
@@ -39,9 +40,14 @@
     url: "{{ vector_download_url }}"
     dest: "/tmp/vector-{{ vector_version }}-musl.tar.gz"
     mode: '0644'
+    timeout: 120
   delegate_to: localhost
   run_once: true
   when: not vector_archive_stat.stat.exists
+  retries: 3
+  delay: 10
+  register: download_result
+  until: download_result is succeeded
   tags: [vector, distr]
 
 - name: Copy vector archive to remote host
