@@ -34,6 +34,7 @@
     mode: '0644'
   delegate_to: localhost
   run_once: true
+  when: not vector_archive_stat.stat.exists
   tags: [vector, distr]
 
 - name: Copy vector archive to remote host
