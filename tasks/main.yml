@@ -86,8 +86,11 @@
     state: started
     enabled: true
     daemon_reload: true
+  when:
+    - ansible_service_mgr == 'systemd'
+    - ansible_facts['service_mgr'] is defined
+    - not (ansible_virtualization_type | default('') in ['docker', 'container', 'lxc'])
   ignore_errors: "{{ ansible_check_mode }}"
-  when: ansible_service_mgr == 'systemd'
   tags: [vector, service]
 
 - name: Flush handlers
