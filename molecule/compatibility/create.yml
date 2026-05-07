@@ -1,0 +1,29 @@
+---
+- name: Create
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Pull images
+      command: "podman pull {{ item.image }}"
+      with_items: "{{ molecule_yml.platforms }}"
+
+    - name: Create and start containers
+      command: >
+        podman run -d
+        --name "{{ item.name }}"
+        "{{ item.image }}"
+        sleep infinity
+      register: server
+      with_items: "{{ molecule_yml.platforms }}"
+
+    - name: Populate instance config
+      set_fact:
+        instance_conf: >-
+          {{ instance_conf | default([]) + [{'instance': item.item.name, 'connection': 'podman'}] }}
+      with_items: "{{ server.results }}"
+
+    - name: Dump instance config
+      copy:
+        content: "{{ instance_conf | to_yaml }}"
+        dest: "{{ molecule_instance_config }}"
+        mode: "0600"

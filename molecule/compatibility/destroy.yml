@@ -1,0 +1,19 @@
+---
+- name: Destroy
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Remove containers
+      command: "podman rm -f {{ item.name }}"
+      with_items: "{{ molecule_yml.platforms }}"
+      ignore_errors: true
+
+    - name: Populate instance config
+      set_fact:
+        instance_conf: []
+
+    - name: Dump instance config
+      copy:
+        content: "{{ instance_conf | to_yaml }}"
+        dest: "{{ molecule_instance_config }}"
+        mode: "0600"

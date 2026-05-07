@@ -1,0 +1,10 @@
+---
+- name: Prepare
+  hosts: ubuntu-latest
+  gather_facts: false
+  tasks:
+    - name: Update apt cache
+      raw: apt-get update
+
+    - name: Install Python 3 on Ubuntu
+      raw: apt-get install -y python3
